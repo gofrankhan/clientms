@@ -50,8 +50,13 @@ if (strlen($_SESSION['clientmsaid']==0)) {
 						<h3 class="inner-tittle two">File Details </h3>
 <?php
 $invid=intval($_GET['invoiceid']);
-if (!file_exists('./uploads/'.$invid)) {
-	mkdir('./uploads/'.$invid, 0777, true);
+$currdir = getcwd();
+if (!file_exists($currdir."/uploads/".$invid)) {
+	chmod($currdir, 0777);
+	if (!@mkdir("./uploads/".$invid, 0777, true)) {
+		$error = error_get_last();
+		echo $error['message'];
+	}
 }
 $sql="select distinct tblclient.FirstName,tblclient.LastName,tblclient.CompanyName,tblclient.Mobilephnumber,tblclient.TaxID,tblclient.AccountID,tblinvoice.BillingId,tblinvoice.PostingDate from  tblclient   
 	join tblinvoice on tblclient.ID=tblinvoice.Userid  where tblinvoice.BillingId=:invid";
@@ -141,10 +146,13 @@ $gtotal+=$subtotal;
 <td>Upload Files</td>
 <td><?php 
 if (isset($_FILES['upload_file'])) {
-	if (!file_exists('./uploads/'.$invid)) {
-		mkdir('./uploads/'.$invid, 0777, true);
+	$uploads_dir = './uploads/'.strval($invid);
+	$tmp_name = $_FILES["upload_file"]["tmp_name"];
+	$name = basename($_FILES["upload_file"]["name"]);
+	if (!@move_uploaded_file($tmp_name, "$uploads_dir/$name")) {
+		$error = error_get_last();
+		echo $error['message'];
 	}
-    move_uploaded_file($_FILES["upload_file"]["tmp_name"], $_FILES["upload_file"]["name"]);
 }
 ?>
 <form name="from_file_upload" action="" method="post"
@@ -161,7 +169,9 @@ if (isset($_FILES['upload_file'])) {
 if ($handle = opendir('./uploads/'.$invid)) {
 while (false !== ($entry = readdir($handle))) {
 	if ($entry != "." && $entry != "..") {
-		echo "<tr><td><u>".$entry."  "."</u><a>Delete</a></td></tr>";
+		$filename = str_replace(" 20", "xxx", $entry);
+		$filename = str_replace(" ", "%", $filename);
+		echo "<tr><td><u>".$entry."  "."</u><a href=delete-file.php?invoiceid=".$invid."&filename=".$filename.">Delete</a></td></tr>";
 	}
 }
 closedir($handle);
