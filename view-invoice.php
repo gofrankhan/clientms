@@ -1,6 +1,9 @@
 <?php
 session_start();
 error_reporting(0);
+//ini_set('display_errors', 1);
+//ini_set('display_startup_errors', 1);
+//error_reporting(E_ALL);
 include('includes/dbconnection.php');
 if (strlen($_SESSION['clientmsaid']==0)) {
   header('location:logout.php');
@@ -123,8 +126,8 @@ $cnt=1;
 if($query1->rowCount() > 0)
 {
 foreach($results as $row1)
-{               ?>
-
+{               
+	?>
 <tr>
 <th><?php echo $cnt;?></th>
 <td><?php echo $row1->ServiceName?></td>	
@@ -149,10 +152,45 @@ if (isset($_FILES['upload_file'])) {
 	$uploads_dir = './uploads/'.strval($invid);
 	$tmp_name = $_FILES["upload_file"]["tmp_name"];
 	$name = basename($_FILES["upload_file"]["name"]);
-	if (!@move_uploaded_file($tmp_name, "$uploads_dir/$name")) {
-		$error = error_get_last();
-		echo $error['message'];
+
+	$ret = 'select file_name from tbl_files where invid=:invid and file_name=:name';
+	$query1 = $dbh -> prepare($ret);
+	$query1->bindParam(':invid',$invid,PDO::PARAM_STR);
+	$query1->bindParam(':name',$name,PDO::PARAM_STR);
+	$query1->execute();
+	$results=$query1->fetchAll(PDO::FETCH_OBJ);
+	if($query1->rowCount() > 0){
+		echo '<script>window.alert("File already exist!")</script>';
+	}else{
+
+		try{
+			$sql="insert into tbl_files(invid,file_name)values(:invid,:filename)";
+			$query=$dbh->prepare($sql);
+			$query->bindParam(':invid',$invid,PDO::PARAM_STR);
+			$query->bindParam(':filename',$name,PDO::PARAM_STR);
+			if($query->execute() == true){
+				if (!@move_uploaded_file($tmp_name, "$uploads_dir/$name")) {
+					$error = error_get_last();
+					echo $error['message'];
+				}
+			}
+		}catch(Exception $ex){
+			$code = $ex->getCode();
+			$message = $ex->getMessage();
+			$file = $ex->getFile();
+			$line = $ex->getLine();
+		}
+		$ret = 'select file_name from tbl_files where invid=:invid and file_name=:name';
+		$query1 = $dbh -> prepare($ret);
+		$query1->bindParam(':invid',$invid,PDO::PARAM_STR);
+		$query1->bindParam(':name',$name,PDO::PARAM_STR);
+		$query1->execute();
+		$results=$query1->fetchAll(PDO::FETCH_OBJ);
+		if($query1->rowCount() == 0){
+			echo '<script>alert("This file was not supported! Please rename file or change file.")</script>';
+		}
 	}
+
 }
 ?>
 <form name="from_file_upload" action="" method="post"
@@ -166,16 +204,17 @@ if (isset($_FILES['upload_file'])) {
 </td>
 </tr>
 <?php
-if ($handle = opendir('./uploads/'.$invid)) {
-while (false !== ($entry = readdir($handle))) {
-	if ($entry != "." && $entry != "..") {
-		$filename = str_replace(" 20", "xxx", $entry);
-		$filename = str_replace(" ", "%", $filename);
-		echo "<tr><td><u>".$entry."  "."</u><a href=delete-file.php?invoiceid=".$invid."&filename=".$filename.">Delete</a></td></tr>";
+	$ret = 'select * from tbl_files where invid=:invid';
+	$query1 = $dbh -> prepare($ret);
+	$query1->bindParam(':invid',$invid,PDO::PARAM_STR);
+	$query1->execute();
+	$results=$query1->fetchAll(PDO::FETCH_OBJ);
+	foreach($results as $row1)
+	{
+		$id = $row1->id;
+		$filename = $row1->file_name;
+		echo "<tr><td><u><a href='./uploads/$invid/$filename'>".$filename."</a>  "."</u><a href=delete-file.php?id=".$id.">Delete</a></td></tr>";
 	}
-}
-closedir($handle);
-}
 ?>
 <tr>
 <td colspan="2">

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Jan 02, 2023 at 06:13 PM
+-- Generation Time: Jan 06, 2023 at 09:47 PM
 -- Server version: 10.4.27-MariaDB
 -- PHP Version: 8.1.12
 
@@ -1743,7 +1743,21 @@ CREATE TABLE `tbl_comments` (
 
 INSERT INTO `tbl_comments` (`id`, `invid`, `name`, `comment`, `comment_time`) VALUES
 (16, '796967440', 'admin', 'sdfsd', '2023-01-02 11:07:26'),
-(19, '628569687', 'admin', 'Oy Raju Payar Na Kario', '2023-01-02 11:59:30');
+(19, '628569687', 'admin', 'Oy Raju Payar Na Kario', '2023-01-02 11:59:30'),
+(21, '693211179', 'admin', 'Hi there', '2023-01-03 17:09:18'),
+(22, '693211179', 'admin', 'dadafaggf', '2023-01-06 20:44:32');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tbl_files`
+--
+
+CREATE TABLE `tbl_files` (
+  `id` int(10) NOT NULL,
+  `invid` varchar(20) NOT NULL,
+  `file_name` varchar(50) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Indexes for dumped tables
@@ -1786,6 +1800,12 @@ ALTER TABLE `tbl_comments`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `tbl_files`
+--
+ALTER TABLE `tbl_files`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- AUTO_INCREMENT for dumped tables
 --
 
@@ -1823,7 +1843,13 @@ ALTER TABLE `tblservices`
 -- AUTO_INCREMENT for table `tbl_comments`
 --
 ALTER TABLE `tbl_comments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
+
+--
+-- AUTO_INCREMENT for table `tbl_files`
+--
+ALTER TABLE `tbl_files`
+  MODIFY `id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=48;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
