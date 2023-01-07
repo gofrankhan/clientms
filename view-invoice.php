@@ -1,9 +1,8 @@
 <?php
 session_start();
-error_reporting(0);
-//ini_set('display_errors', 1);
-//ini_set('display_startup_errors', 1);
-//error_reporting(E_ALL);
+// ini_set('display_errors', 1);
+// ini_set('display_startup_errors', 1);
+// error_reporting(E_ALL);
 include('includes/dbconnection.php');
 if (strlen($_SESSION['clientmsaid']==0)) {
   header('location:logout.php');
@@ -55,13 +54,13 @@ if (strlen($_SESSION['clientmsaid']==0)) {
 $invid=intval($_GET['invoiceid']);
 $currdir = getcwd();
 if (!file_exists($currdir."/uploads/".$invid)) {
-	chmod($currdir, 0777);
-	if (!@mkdir("./uploads/".$invid, 0777, true)) {
+	chmod($currdir, 0755);
+	if (!@mkdir("./uploads/".$invid, 0755, true)) {
 		$error = error_get_last();
 		echo $error['message'];
 	}
 }
-$sql="select distinct tblclient.FirstName,tblclient.LastName,tblclient.CompanyName,tblclient.Mobilephnumber,tblclient.TaxID,tblclient.AccountID,tblinvoice.BillingId,tblinvoice.PostingDate from  tblclient   
+$sql="select distinct tblclient.FirstName,tblclient.LastName,tblclient.CompanyName,tblclient.Mobilephnumber,tblclient.TaxID,tblclient.AccountID,tblinvoice.BillingId,tblinvoice.PostingDate,tblinvoice.PostingBy from  tblclient   
 	join tblinvoice on tblclient.ID=tblinvoice.Userid  where tblinvoice.BillingId=:invid";
 $query = $dbh -> prepare($sql);
 $query->bindParam(':invid',$invid,PDO::PARAM_STR);
@@ -77,42 +76,12 @@ foreach($results as $row)
 						<div class="graph">
 							<div class="tables">
 								<h4>Files #<?php echo $invid;?></h4>
-													<table class="table table-bordered" width="80%" border="1"> 
-<tr>
-<th colspan="8">Client Details</th>	
-</tr>
-							 <tr> 
-								<th>Contact Name</th> 
-								<td><?php  echo htmlentities($row->FirstName);?> <?php  echo htmlentities($row->LastName);?></td>
-								<th>Comapny Name</th> 
-								<td><?php  echo htmlentities($row->CompanyName);?></td> 
-							</tr>
-							<tr> 
-								<th>TAX ID</th> 
-								<td><?php echo htmlentities($row->TaxID);?></td> 
-								<th>Account ID</th> 
-								<td colspan="6"><?php echo  htmlentities($row->AccountID);?></td> 
-							</tr> 
-							<tr>
-								<th>Contact no.</th> 
-								<td><?php  echo htmlentities($row->Mobilephnumber);?></td>
-								<th>File Created</th> 
-								<td colspan="6"><?php echo  htmlentities($row->PostingDate);?></td>
-							</tr> 
-<?php $cnt=$cnt+1;}} ?>
-</table>
-<table class="table table-bordered" width="100%" border="1"> 
-<tr>
-<th colspan="3">Services Details</th>	
-</tr>
-<tr>
-<th>#</th>	
-<th>Service</th>
-<th>Cost</th>
-</tr>
+
+
+<table class="table table-bordered" width="80%" border="1"> 
 
 <?php
-$ret="select tblservices.ServiceName,tblservices.ServicePrice  
+$ret="select tblservices.ServiceName,tblservices.ServiceCategory  
 	from  tblinvoice 
 	join tblservices on tblservices.ID=tblinvoice.ServiceId 
 	where tblinvoice.BillingId=:invid";
@@ -126,13 +95,9 @@ $cnt=1;
 if($query1->rowCount() > 0)
 {
 foreach($results as $row1)
-{               
-	?>
-<tr>
-<th><?php echo $cnt;?></th>
-<td><?php echo $row1->ServiceName?></td>	
-<td><?php echo "$".$subtotal=$row1->ServicePrice?></td>
-</tr>
+{               ?>
+
+
 
 <?php
 $gtotal+=$subtotal;
@@ -140,14 +105,69 @@ $gtotal+=$subtotal;
 
 } ?>
 
-<tr>
-<th colspan="2" style="text-align:center">Grand Total</th>
-<th><?php echo "$".$gtotal?></th>	
 
+							 <tr> 
+								<th>Contact Name</th> 
+								<td><?php  echo htmlentities($row->FirstName);?> <?php  echo htmlentities($row->LastName);?></td>
+								<th>Contact Number</th> 
+								<td><?php  echo htmlentities($row->Mobilephnumber);?></td> 
+							</tr>	
+</tr>
+							 <tr> 
+								<th>Service Name</th> 
+								<td><?php echo $row1->ServiceName?></td>
+								<th>TAX ID</th> 
+								<td><?php  echo htmlentities($row->TaxID);?></td> 
+							</tr>
+							<tr>
+								<th>File Created By</th> 
+								<td><?php  echo htmlentities($row->PostingBy);?></td>
+								<th>Created At</th> 
+								<td colspan="6"><?php echo  htmlentities($row->PostingDate);?></td>
+							</tr> 
+<?php $cnt=$cnt+1;}} ?>
+</table>
+
+
+
+
+<?php
+$ret="select tblservices.ServiceName,tblservices.ServiceCategory  
+	from  tblinvoice 
+	join tblservices on tblservices.ID=tblinvoice.ServiceId 
+	where tblinvoice.BillingId=:invid";
+$query1 = $dbh -> prepare($ret);
+$query1->bindParam(':invid',$invid,PDO::PARAM_STR);
+$query1->execute();
+
+$results=$query1->fetchAll(PDO::FETCH_OBJ);
+
+$cnt=1;
+if($query1->rowCount() > 0)
+{
+foreach($results as $row1)
+{               ?>
+
+
+
+<?php
+$gtotal+=$subtotal;
+ $cnt=$cnt+1;}
+
+} ?>
+
+
+
+<table class="table table-bordered" width="80%" border="1"> 
+
+<tr>
+<th colspan="8"><p class="text-primary">File Upload Section</p></th>	
 </tr>
 <tr>
+<br>
+<br>
 <td>Upload Files</td>
-<td><?php 
+<td colspan="4"><?php 
 if (isset($_FILES['upload_file'])) {
 	$uploads_dir = './uploads/'.strval($invid);
 	$tmp_name = $_FILES["upload_file"]["tmp_name"];
@@ -204,20 +224,26 @@ if (isset($_FILES['upload_file'])) {
 </td>
 </tr>
 <?php
-	$ret = 'select * from tbl_files where invid=:invid';
-	$query1 = $dbh -> prepare($ret);
-	$query1->bindParam(':invid',$invid,PDO::PARAM_STR);
-	$query1->execute();
-	$results=$query1->fetchAll(PDO::FETCH_OBJ);
-	foreach($results as $row1)
-	{
-		$id = $row1->id;
-		$filename = $row1->file_name;
-		echo "<tr><td><u><a href='./uploads/$invid/$filename'>".$filename."</a>  "."</u><a href=delete-file.php?id=".$id.">Delete</a></td></tr>";
-	}
+$ret = 'select * from tbl_files where invid=:invid';
+$query1 = $dbh -> prepare($ret);
+$query1->bindParam(':invid',$invid,PDO::PARAM_STR);
+$query1->execute();
+$results=$query1->fetchAll(PDO::FETCH_OBJ);
+foreach($results as $row1)
+{
+	$id = $row1->id;
+	$filename = $row1->file_name;
+	echo "<tr><td><u><a href='./uploads/$invid/$filename'>".$filename."</a>  "."</u><a href=delete-file.php?id=".$id.">Delete</a></td></tr>";
+}
 ?>
+
 <tr>
-<td colspan="2">
+<th colspan="8"><p class="text-primary">Comment Section</p></th>	
+</tr>
+
+
+<tr>
+<td colspan="8">
 	<?php
 	if (isset($_POST['btn_commnet'])) {
 		$sql = "insert into `tbl_comments` (invid, comment, name) values('$invid','{$_POST['comment']}','{$_SESSION['login']}')";
@@ -232,7 +258,7 @@ if (isset($_FILES['upload_file'])) {
     <span class="input-group-text">Comments</span>
   </div>
   <textarea rows="3" cols="75" name="comment" calss="taclass" aria-label="Comments"></textarea><br>
-  <input type="submit" name="btn_commnet" value="Send">
+  <input type="submit" name="btn_commnet" value="Post Comments">
 </div>
 </form>
 </td>
@@ -251,16 +277,14 @@ if (isset($_FILES['upload_file'])) {
 	{    
 		echo "<tr><td>
 		<b>Created At:</b> ".$row->comment_time." <b>Created By:</b> ".$row->name."<br>
-		<b>Message:</b> ".$row->comment."</td></tr>";
+		<b>Message:</b><p class='text-primary'> ".$row->comment."<p/></td></tr>";
 	}
 	}
 	?>
 </tr>
 
 </table>
-<p style="margin-top:1%"  align="center">
-  <i class="fa fa-print fa-2x" style="cursor: pointer;"  OnClick="CallPrint(this.value)" ></i>
-</p>
+
 
 							</div>
 

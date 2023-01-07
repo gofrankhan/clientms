@@ -19,7 +19,7 @@ $query=$dbh->prepare($sql);
 $query->bindParam(':scategory',$scategory,PDO::PARAM_STR);
 $query->bindParam(':sname',$sname,PDO::PARAM_STR);
 $query->bindParam(':price',$price,PDO::PARAM_STR);
- $query->execute();
+$query->execute();
 
    $LastInsertId=$dbh->lastInsertId();
    if ($LastInsertId>0) {
